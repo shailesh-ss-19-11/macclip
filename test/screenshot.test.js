@@ -20,7 +20,8 @@ test('hands a new screenshot file to the callback exactly once', async () => {
   await w.start();
   fs.writeFileSync(path.join(dir, 'holiday.png'), 'ignored');
   fs.writeFileSync(path.join(dir, 'Screenshot 2026-10-17 at 3.28.37 PM.png'), 'pixels');
-  await new Promise((r) => setTimeout(r, 600));
+  for (let i = 0; i < 100 && got.length === 0; i++) await new Promise((r) => setTimeout(r, 50)); // CI file events can be slow
+  await new Promise((r) => setTimeout(r, 300)); // then give a duplicate time to show up
   w.stop();
   fs.rmSync(dir, { recursive: true });
   assert.equal(got.length, 1);
