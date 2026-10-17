@@ -103,6 +103,21 @@ Design notes:
 - **Thumbnails** are separate encrypted blobs loaded lazily (IntersectionObserver); full images are only read when restored. Image decode/resize runs on the main process.
 - Items larger than 1 MB (text/rich text) or 30 MB (images) are skipped.
 
+## Releasing
+
+Releases are automated with GitHub Actions (`.github/workflows`):
+
+- **CI** runs `npm test` on every push to `main` and on pull requests.
+- **Release** builds the arm64 and x64 packages and publishes a GitHub release when you push a version tag:
+
+```sh
+npm version 1.1.0 --no-git-tag-version   # bump package.json (and the lockfile)
+git commit -am "Release 1.1.0" && git push
+git tag v1.1.0 && git push origin v1.1.0
+```
+
+The tag must match the version in `package.json`. To try the build without publishing, run the *Release* workflow manually from the Actions tab; it uploads the zips as a build artifact. Builds are ad-hoc signed; add Developer ID signing and notarization if you get an Apple Developer account. Note: macOS runners on private repositories use GitHub's paid-minute multiplier (10×).
+
 ## Tests
 
 ```sh

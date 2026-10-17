@@ -1,0 +1,65 @@
+name: Release
+
+# Push a tag like v1.2.0 to build both Mac packages and publish a GitHub release.
+# Run manually (Actions → Release → Run workflow) for a dry run that only uploads the build as an artifact.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $VERSION" >&2
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Build packages
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          mkdir -p release
+          for ARCH in arm64 x64; do
+            ARCH=$ARCH npm run package
+            ditto -c -k --sequesterRsrc --keepParent "dist/MacClip-darwin-$ARCH/MacClip.app" "release/MacClip-$VERSION-mac-$ARCH.zip"
+          done
+          (cd release && shasum -a 256 *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacClip-build
+          path: release/*
+          retention-days: 14
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/* \
+              --title "MacClip ${GITHUB_REF_NAME#v}" \
+              --notes-file .github/release-notes.md \
+              --generate-notes
+          fi
