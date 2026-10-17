@@ -56,4 +56,4 @@ class ScreenshotWatcher {
   }
 }
 
-module.exports = { ScreenshotWatcher, NAME };
+module.exports = { ScreenshotWatcher, NAME, screenshotDir };

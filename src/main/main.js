@@ -15,7 +15,8 @@ const { EncryptedFilePersistence, FileKeyProvider, MemoryPersistence } = require
 const { PrivacyManager } = require('./privacy');
 const { ClipboardMonitor } = require('./clipboardMonitor');
 const { AppTracker } = require('./appTracker');
-const { ScreenshotWatcher } = require('./screenshotWatcher');
+const { ScreenshotWatcher, screenshotDir } = require('./screenshotWatcher');
+const { execFile } = require('node:child_process');
 const { PasteCoordinator } = require('./pasteCoordinator');
 const { HotKeyManager } = require('./hotkey');
 const { panelPosition } = require('./positioner');
@@ -81,7 +82,7 @@ async function start() {
   monitor.start();
   screenshots = new ScreenshotWatcher({ onScreenshot: (png) => { const img = nativeImage.createFromBuffer(png); if (!img.isEmpty()) clipboard.writeImage(img); } });
   if (settings.get('copyScreenshots')) screenshots.start();
-  if (firstRun) openSettings(); // make the very first launch visible
+  if (firstRun) { openSettings(); requestAllPermissions(); } // make the very first launch visible and ask for everything once
 
   store.on('change', () => { panel?.webContents.send('history:changed'); });
   settings.on('change', onSettingChanged);
@@ -202,6 +203,21 @@ function onSettingChanged(key) {
   panel?.webContents.send('history:changed');
 }
 
+/** Triggers every macOS permission prompt MacClip can need, so the user answers them together. */
+async function requestAllPermissions() {
+  // An updated build is a "different" app to macOS, which leaves a switched-on entry that no longer applies.
+  // Clear MacClip's own entries so the prompts below create fresh, working ones.
+  if (app.isPackaged && !systemPreferences.isTrustedAccessibilityClient(false)) {
+    for (const service of ['Accessibility', 'AppleEvents']) {
+      await new Promise((resolve) => execFile('/usr/bin/tccutil', ['reset', service, 'com.macclip.app'], () => resolve()));
+    }
+  }
+  systemPreferences.isTrustedAccessibilityClient(true); // Accessibility: send ⌘V
+  execFile('/usr/bin/osascript', ['-e', 'tell application "System Events" to count processes'], { timeout: 60000 }, () => {}); // Automation: System Events
+  try { fs.readdirSync(await screenshotDir()); } catch { /* denied: macOS shows its folder prompt here */ } // screenshot folder
+  notify('MacClip is ready', 'Press ⌥V to open clipboard history.'); // Notifications
+}
+
 function notify(title, body) {
   if (Notification.isSupported()) new Notification({ title, body, silent: true }).show();
 }
@@ -280,9 +296,9 @@ function registerIpc() {
   });
 
   ipcMain.handle('settings:accessibility', () => systemPreferences.isTrustedAccessibilityClient(false));
-  ipcMain.handle('settings:requestAccessibility', () => {
-    systemPreferences.isTrustedAccessibilityClient(true);
-    shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility');
+  ipcMain.handle('settings:requestAccessibility', async () => {
+    await requestAllPermissions();
+    if (!systemPreferences.isTrustedAccessibilityClient(false)) shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility');
   });
 }
 
