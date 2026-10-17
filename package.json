@@ -1,0 +1,20 @@
+{
+  "name": "macclip",
+  "version": "1.0.0",
+  "description": "Clipboard history for macOS, inspired by Windows Win+V",
+  "main": "src/main/main.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --test \"test/*.test.js\"",
+    "smoke": "MACCLIP_SMOKE=1 electron .",
+    "icons": "node scripts/make-icons.js",
+    "package": "node scripts/package.js"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^38.8.6"
+  }
+}
