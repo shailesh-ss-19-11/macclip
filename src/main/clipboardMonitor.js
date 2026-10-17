@@ -9,7 +9,7 @@ const { capture } = require('./capture');
  * `clipboard` adapter: { fingerprint(), snapshot(), formats() }.
  */
 class ClipboardMonitor {
-  constructor({ clipboard, store, privacy, apps, intervalMs = 500, limits, onCapture }) {
+  constructor({ clipboard, store, privacy, apps, intervalMs = 250, limits, onCapture }) {
     this.clipboard = clipboard;
     this.store = store;
     this.privacy = privacy;

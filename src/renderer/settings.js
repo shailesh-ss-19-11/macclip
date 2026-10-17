@@ -12,6 +12,7 @@
     $('paste').value = s.pasteBehavior;
     $('limit').value = String(s.historyLimit);
     $('paused').checked = s.paused;
+    $('shots').checked = s.copyScreenshots;
     $('ax-row').hidden = s.pasteBehavior !== 'copyAndPaste';
     if (s.hotkeyStatus.state === 'failed' && !recording) showShortcutMessage(s.hotkeyStatus.message, true);
     refreshAccessibility();
@@ -59,6 +60,7 @@
   bind('paste', 'pasteBehavior', (e) => e.value);
   bind('limit', 'historyLimit', (e) => Number(e.value));
   bind('paused', 'paused', (e) => e.checked);
+  bind('shots', 'copyScreenshots', (e) => e.checked);
   $('launch').addEventListener('change', async () => { $('launch').checked = await api.setLaunchAtLogin($('launch').checked); });
   $('clear-all').addEventListener('click', () => api.clearAll());
   $('ax-btn').addEventListener('click', () => api.requestAccessibility());

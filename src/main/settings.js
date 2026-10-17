@@ -8,6 +8,7 @@ const DEFAULTS = Object.freeze({
   pasteBehavior: 'copyAndPaste', // 'copyOnly' | 'copyAndPaste'
   historyLimit: 500,
   paused: false,
+  copyScreenshots: true, // copy new ⌘⇧3/4/5 screenshot files to the clipboard
 });
 
 const VALIDATORS = {
@@ -15,6 +16,7 @@ const VALIDATORS = {
   pasteBehavior: (v) => ['copyOnly', 'copyAndPaste'].includes(v),
   historyLimit: (v) => Number.isInteger(v) && v >= 10 && v <= 100_000,
   paused: (v) => typeof v === 'boolean',
+  copyScreenshots: (v) => typeof v === 'boolean',
 };
 
 /** Preferences in a small JSON file. Never contains clipboard content. */

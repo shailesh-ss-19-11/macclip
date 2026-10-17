@@ -3,7 +3,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const {
   app, BrowserWindow, Tray, Menu, globalShortcut, screen, ipcMain, powerMonitor,
-  dialog, systemPreferences, safeStorage, Notification, shell, nativeImage,
+  dialog, systemPreferences, safeStorage, Notification, shell, nativeImage, clipboard,
 } = require('electron');
 
 app.setPath('userData', process.env.MACCLIP_DATA_DIR || path.join(app.getPath('appData'), 'MacClip'));
@@ -15,6 +15,7 @@ const { EncryptedFilePersistence, FileKeyProvider, MemoryPersistence } = require
 const { PrivacyManager } = require('./privacy');
 const { ClipboardMonitor } = require('./clipboardMonitor');
 const { AppTracker } = require('./appTracker');
+const { ScreenshotWatcher } = require('./screenshotWatcher');
 const { PasteCoordinator } = require('./pasteCoordinator');
 const { HotKeyManager } = require('./hotkey');
 const { panelPosition } = require('./positioner');
@@ -27,7 +28,7 @@ const MAX_LISTED = 300;
 const RENDERER = path.join(__dirname, '..', 'renderer');
 const PRELOAD = path.join(__dirname, 'preload.js');
 
-let settings, store, privacy, monitor, apps, paste, hotkeys, tray;
+let settings, store, privacy, monitor, apps, paste, hotkeys, tray, screenshots;
 let panel = null;
 let settingsWindow = null;
 let targetApp = null;
@@ -78,6 +79,8 @@ async function start() {
   if (error) notify('Shortcut unavailable', `${error} Open Settings to choose another shortcut.`);
   else notify('MacClip is running', `Press ${Accelerator.display(settings.get('hotkey'))} to open clipboard history, or use the clipboard icon in the menu bar.`);
   monitor.start();
+  screenshots = new ScreenshotWatcher({ onScreenshot: (png) => { const img = nativeImage.createFromBuffer(png); if (!img.isEmpty()) clipboard.writeImage(img); } });
+  if (settings.get('copyScreenshots')) screenshots.start();
   if (firstRun) openSettings(); // make the very first launch visible
 
   store.on('change', () => { panel?.webContents.send('history:changed'); });
@@ -194,6 +197,7 @@ function openSettings() {
 function onSettingChanged(key) {
   if (key === 'historyLimit') store.setRetention({ maxItems: settings.get('historyLimit') });
   if (key === 'hotkey' || key === 'paused') refreshTray();
+  if (key === 'copyScreenshots') { if (settings.get(key)) screenshots.start(); else screenshots.stop(); }
   settingsWindow?.webContents.send('settings:changed');
   panel?.webContents.send('history:changed');
 }
@@ -284,6 +288,7 @@ function registerIpc() {
 
 app.on('before-quit', () => {
   monitor?.stop();
+  screenshots?.stop();
   globalShortcut.unregisterAll();
   try { store?.flushSync(); } catch { /* nothing more to do while quitting */ }
 });
