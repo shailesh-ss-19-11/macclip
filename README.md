@@ -1,142 +1,107 @@
 # MacClip
 
-Clipboard history for macOS, inspired by Windows `Win + V`. A menu bar app built with Electron.
+Clipboard history for macOS, inspired by Windows `Win + V`. A small menu bar app built with Electron.
 
-Press **⌥V** (Option + V) from any app to open the history, pick an item, and it is copied and (optionally) pasted into the app you were using.
+Press **⌥V** (Option + V) in any app, pick an item, and it is pasted where you were typing.
 
-## Features
+## What it does
 
-- Global shortcut (default **⌥V**, configurable, conflict detection, re-registered after sleep/wake)
-- Records text, rich text (RTF/HTML kept), links, images and code snippets with timestamp, type and source app
-- Floating panel opens next to the cursor on the right display: search, date sections, thumbnails, link host/path preview, pin, delete, clear unpinned
-- Keyboard: `↑ ↓` move · `↩` select · **`⇧↩` paste as plain text** · `Esc` close · `⌘P` pin · `⌘⌫` delete (empty search) · `⌘1`–`⌘9` quick select · `⇥` switch History/Snippets · `⌘S` save item as snippet
-- **Snippets:** reusable text that never expires, managed in Settings or saved from history with `⌘S`, pasted from the Snippets tab
-- **Screenshots:** screenshots saved by macOS (⌘⇧3 / ⌘⇧4 / ⌘⇧5) are added to history and also copied to the clipboard (both toggleable). ⌃⌘⇧4 screenshots already go to the clipboard and are captured like any image
-- **App icons:** each row shows the icon of the app it was copied from
-- **Secret detection:** text that looks like an API key, token, private key, password assignment or card number (Luhn-checked) is not saved by default; alternatively saved hidden for 2 minutes, or saved normally
-- "Copy to Clipboard" or "Copy and Paste" behaviour
-- Menu bar item: show history, pause/resume, clear unpinned, settings, quit
-- History persists across launches; limits of 100 / 500 / 1,000 items and automatic deletion after 1 / 7 / 30 / 90 days. Pinned items are never removed automatically
-- Privacy: encrypted at rest, local only, pause, excluded apps, password-manager exclusion, retention, delete-all
-- Light / dark / system appearance, launch at login
+- Remembers what you copy: text, formatted text, links, images and code
+- **⌥V** opens the history next to your cursor. Type to search
+- `↑ ↓` to move, `↩` to paste, `⇧↩` to paste as plain text, `Esc` to close
+- Pin items you want to keep (`⌘P` or the pin button) and delete items (`⌘⌫` or the trash button)
+- Menu bar icon: open history, pause, settings, quit
+- Settings: shortcut, copy-and-paste or copy-only, history size (100 / 500 / 1,000), open at login, pause, delete all history
 
-## Requirements
+That is the whole app. There is nothing else to configure.
 
-- macOS 12 or newer (Apple Silicon or Intel), Node.js 20+ (developed on Node 22)
+## Privacy
+
+- Everything stays on your Mac. There is no network code and no analytics. Nothing is logged.
+- History is stored in `~/Library/Application Support/MacClip/data/` (private folder, owner-only files), encrypted with AES-256-GCM. The key is a file (`history.key`) in the same folder, so this protects against casual reading and file backups, not against someone who has access to your macOS account.
+- **Never saved:** copies from password managers (1Password, Bitwarden, KeePassXC, Dashlane, LastPass, Keychain Access, Proton Pass…), content apps mark as concealed/temporary, file copies from Finder, and text that looks like a credential (API keys, tokens, private keys, `password=…` lines, card numbers). Detection is pattern-based, so it can miss things or occasionally skip harmless text.
+- **Limitation:** macOS cannot reliably tell what is sensitive. Anything else you copy *is* saved (for example a password copied from a web page). Use **Pause** when working with secrets.
+- Link previews are drawn locally (host and path). MacClip never fetches favicons or titles because that would reveal what you copied.
+
+## Install
+
+Download the `.dmg` for your Mac from the [Releases](../../releases) page (**arm64** for Apple Silicon M1–M4, **x64** for Intel), open it and drag **MacClip.app** to **Applications**.
+
+The app is not notarized by Apple, so macOS blocks the first launch: open MacClip once, then System Settings → Privacy & Security → scroll down → **Open Anyway** (macOS 15+; on older versions right-click → Open also works). Or run:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/MacClip.app
+```
+
+**Automatic paste needs permission.** Allow MacClip under System Settings → Privacy & Security → **Accessibility** (and Automation → System Events if asked). MacClip then presses ⌘V for you, only in the app you were using, and only if it is still in front. Without permission, items are still copied and you press ⌘V yourself.
+
+Requires macOS 12 or later.
 
 ## Run from source
 
 ```sh
 npm install
-npm start
+npm start          # or: npm run dev
 ```
 
-The clipboard icon appears in the menu bar (no Dock icon). Quit from the menu bar menu.
+From source the app is called "Electron" in macOS permission lists, so grant Accessibility to Electron (or your terminal).
 
-> When running from source the app is "Electron", so macOS Accessibility permission must be granted to **Electron** (or your terminal/IDE) rather than MacClip.
-
-## App icon
-
-The icon is built from `assets/icon-source.png`: `npx electron scripts/build-icon.js assets/icon-source.png` makes the transparent `assets/icon.png` and `assets/icon.icns`. Menu bar icons come from `npm run icons`.
-
-## Build the `.app`
+## Build
 
 ```sh
-npm run package            # dist/MacClip-darwin-<your arch>/MacClip.app
-ARCH=x64 npm run package   # or arm64 / universal
+ARCH=arm64 npm run package && npm run dmg -- arm64    # release/MacClip-<version>-mac-arm64.dmg
+ARCH=x64   npm run package && npm run dmg -- x64
 ```
-
-`npm run dmg` (after packaging) wraps the app into `release/MacClip-<version>-mac-<arch>.dmg` with an Applications shortcut. Open the DMG and drag `MacClip.app` to Applications. The app is only ad-hoc signed (not notarized), so macOS blocks the first launch: open it once, then System Settings → Privacy & Security → **Open Anyway** (macOS 15+; on older versions right-click → Open also works), or run `xattr -dr com.apple.quarantine /Applications/MacClip.app`. To distribute to other Macs, sign and notarize with a Developer ID: `SIGN_IDENTITY="Developer ID Application: …" npm run package`, then notarize with `xcrun notarytool`.
-
-"Launch at login" only works from the installed app.
-
-## Permissions
-
-| Permission | Why | If missing |
-|---|---|---|
-| **Accessibility** (System Settings → Privacy & Security → Accessibility) | To send ⌘V to the app you were using | Items are still copied; press ⌘V yourself |
-| **Automation → System Events** (prompted on first paste) | Pasting is done by asking System Events to press ⌘V | Same as above |
-| **Files & Folders** (prompted once) | To watch your screenshot folder (usually Desktop) for new screenshots | Screenshots saved as files are not imported; clipboard screenshots still work |
-
-MacClip only pastes into the app that was frontmost when you opened the panel, and only if it is frontmost again afterwards. If you switched apps, it copies and tells you instead of pasting somewhere unexpected. It never activates a third app.
-
-Enable it in Settings → General → Accessibility → *Grant Access…*. After rebuilding the app, macOS treats it as a new app: remove the old entry from the Accessibility list and add it again.
-
-## Privacy and security
-
-- Everything stays on your Mac. There is no network code and no analytics.
-- History is stored in `~/Library/Application Support/MacClip/data/` (folder mode 0700, files 0600), encrypted with AES-256-GCM; each image is a separate encrypted blob. The random key is a file (`history.key`) in the same folder. This needs no Keychain access and never fails for permission reasons, but it only protects against casual reading and file backups, not against someone with access to your macOS account.
-- Clipboard content is never logged.
-- Skipped automatically: copies made while an **excluded app** is frontmost, a built-in list of password managers (toggleable), content marked concealed/transient/auto-generated via the `org.nspasteboard.*` markers, file copies from Finder, and copies made while monitoring is **paused**.
-- Secret detection is pattern-based (AWS, GitHub, Slack, Stripe, Google, `sk-` keys, JWTs, private keys, bearer tokens, `password=…` lines, card numbers). It will miss secrets that don't match, and can occasionally flag harmless text; change Settings → Privacy → *Likely secrets*.
-- **Limitation:** macOS cannot reliably tell that something is sensitive. Anything copied from a non-excluded app that does not set those markers *is* saved (e.g. a password copied from a web page). Pause monitoring or exclude apps that handle secrets.
-- The source app is identified when the change is *detected* (polled every 0.5 s), so if you switch apps within that window it can be misattributed.
-- Link previews are rendered locally (host + path). MacClip does not fetch favicons or page titles because that would reveal what you copied.
-- Unreadable history is renamed `history.corrupt-<time>.bin` and the app starts empty. If the data folder cannot be written, history is kept in memory only and the menu shows a warning.
-
-## Architecture
-
-```
-src/main/            main process (no UI)
-  main.js            wiring, panel/tray/settings windows, IPC
-  clipboardMonitor.js  polls a fingerprint, applies privacy, captures, stores
-  systemClipboard.js   the only file that touches Electron's clipboard/nativeImage
-  capture.js         pure: snapshot → item (type detection, hashing, limits)
-  historyStore.js    in-memory history: dedupe, pin, delete, search, retention, debounced saves
-  persistence.js     AES-GCM encrypted file store + key-file provider + in-memory test double
-  privacy.js         exclusions, pause, concealed types
-  hotkey.js          global shortcut registration, conflicts, wake re-register
-  pasteCoordinator.js  restore to clipboard, verify target app, send ⌘V
-  appTracker.js      frontmost app via `lsappinfo` (no permissions needed)
-  settings.js        validated JSON preferences
-  positioner.js      panel placement across displays
-src/shared/          pure logic used by both renderer and tests (sections, key bindings, accelerators)
-src/renderer/        panel + settings UI (plain HTML/CSS/JS, sandboxed, contextIsolation, strict CSP)
-test/                node:test unit tests
-```
-
-Design notes:
-
-- **Polling:** Electron exposes no pasteboard change counter, so the monitor polls a cheap fingerprint every 500 ms (format list + text + hash of raw image bytes) and does real work only on change. Idle cost is small; while a very large image sits on the clipboard each poll hashes its bytes.
-- **Electron version is pinned to 38.** Electron 44 replaced the synchronous clipboard API with an async web-style one that cannot read pasteboard formats such as `public.png` or the `org.nspasteboard` markers MacClip relies on.
-- **Thumbnails** are separate encrypted blobs loaded lazily (IntersectionObserver); full images are only read when restored. Image decode/resize runs on the main process.
-- Items larger than 1 MB (text/rich text) or 30 MB (images) are skipped.
 
 ## Releasing
 
-Releases are automated with GitHub Actions (`.github/workflows`):
-
-- **CI** runs `npm test` on every push to `main` and on pull requests.
-- **Release** builds the arm64 and x64 DMGs and zips and publishes a GitHub release when you push a version tag:
+GitHub Actions (`.github/workflows`) runs the tests on every push and builds + publishes a release when you push a version tag:
 
 ```sh
-npm version 1.1.0 --no-git-tag-version   # bump package.json (and the lockfile)
-git commit -am "Release 1.1.0" && git push
-git tag v1.1.0 && git push origin v1.1.0
+npm version 1.2.0 --no-git-tag-version
+git commit -am "Release 1.2.0" && git push
+git tag v1.2.0 && git push origin v1.2.0
 ```
 
-The tag must match the version in `package.json`. To try the build without publishing, run the *Release* workflow manually from the Actions tab; it uploads the zips as a build artifact. Builds are ad-hoc signed; add Developer ID signing and notarization if you get an Apple Developer account. Note: macOS runners on private repositories use GitHub's paid-minute multiplier (10×).
+Run the *Release* workflow manually for a dry run that only uploads the build as an artifact. Builds are ad-hoc signed; notarization needs an Apple Developer account.
+
+## How it works
+
+```
+src/main/            main process
+  main.js              wiring: panel, menu bar, settings window, IPC
+  clipboardMonitor.js  polls a clipboard fingerprint every 0.5 s, applies privacy rules, stores new items
+  systemClipboard.js   the only file that touches Electron's clipboard / nativeImage
+  capture.js           pure: clipboard snapshot → history item (type detection, hashing, size limits)
+  historyStore.js      in-memory history: dedupe, pin, delete, search, size limit, debounced saves
+  persistence.js       AES-GCM encrypted file store, key-file provider, in-memory test double
+  privacy.js, secrets.js   what is never saved
+  hotkey.js            global shortcut registration, conflicts, re-register after wake
+  pasteCoordinator.js  restore to clipboard, verify the target app, send ⌘V
+  appTracker.js        frontmost app via `lsappinfo` (no permission needed)
+src/shared/          pure logic used by the UI and tests (date sections, key bindings, shortcut parsing)
+src/renderer/        panel + settings (plain HTML/CSS/JS, sandboxed, strict CSP)
+test/                node:test unit tests
+```
+
+Notes: Electron exposes no clipboard change counter, so the monitor polls a cheap fingerprint. Electron is pinned to 38 because newer versions replaced the synchronous clipboard API this app needs. Items over 1 MB (text) or 30 MB (images) are skipped.
 
 ## Tests
 
 ```sh
-npm test         # 98 unit tests (node:test)
+npm test         # 82 unit tests (node:test)
 npm run smoke    # drives the real Electron clipboard, nativeImage and globalShortcut
 ```
 
-Unit tests cover change detection, text/URL/image/code capture, duplicates, search and sorting, pinning and deletion, retention, persistence across relaunch (including encryption, corruption and wrong key), shortcut registration/conflicts/wake, privacy exclusions, paste behaviour when switching apps, and keyboard navigation logic.
-
-Not automated: the physical hotkey press, real pastes into other apps, the tray menu, sleep/wake, launch at login and VoiceOver. Use [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md).
+Not automated: pressing the real hotkey, pasting into other apps, the menu bar item, launch at login. Use [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| ⌥V does nothing | Another app owns the shortcut (a ⚠︎ appears in the menu bar menu). Pick a new one in Settings. Also check the menu bar icon exists |
-| Item is copied but not pasted | Grant Accessibility (and Automation → System Events), then reopen the panel. You will get a notification explaining which case it was |
-| macOS blocks MacClip or says it is damaged | The app is not notarized. System Settings → Privacy & Security → **Open Anyway**, or `xattr -dr com.apple.quarantine /Applications/MacClip.app` |
-| Pasting stopped working after a rebuild | Remove MacClip from the Accessibility list and add it again |
-| Nothing is recorded | Monitoring may be paused (menu bar), the source app may be excluded, or the app marks its content as concealed |
-| Items from a password manager appear | Add that app under Settings → Privacy → Excluded apps |
-| History empty after update | See `history.corrupt-*.bin` in the data folder; `history.key` may have been deleted (the old history cannot be decrypted without it) |
+| macOS blocks MacClip or says it is damaged | Not notarized. System Settings → Privacy & Security → **Open Anyway**, or the `xattr` command above |
+| ⌥V does nothing | Another app owns the shortcut (the menu bar shows ⚠︎). Pick another in Settings. Check the menu bar icon exists |
+| Item is copied but not pasted | Allow Accessibility (Settings shows its status), then try again. A notification says which case it was |
+| Pasting stopped after updating | Remove MacClip from the Accessibility list and add it again |
+| Nothing is recorded | Monitoring may be paused, the app may be a password manager, or the text looks like a credential |
 | Reset everything | Quit, then delete `~/Library/Application Support/MacClip` |

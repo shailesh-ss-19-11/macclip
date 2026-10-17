@@ -4,10 +4,10 @@
 function toListItem(item) {
   const out = {
     id: item.id, kind: item.kind, createdAt: item.createdAt, isPinned: item.isPinned,
-    sourceAppName: item.sourceAppName, sourceBundleId: item.sourceBundleId ?? null, sensitive: !!item.sensitive, hasImage: item.hasImage,
+    sourceAppName: item.sourceAppName, hasImage: item.hasImage,
     imageWidth: item.imageWidth, imageHeight: item.imageHeight, preview: preview(item),
   };
-  if (item.kind === 'url' && !item.sensitive) {
+  if (item.kind === 'url') {
     try {
       const u = new URL(item.text);
       out.urlHost = u.hostname.replace(/^www\./, '');
@@ -18,7 +18,6 @@ function toListItem(item) {
 }
 
 function preview(item, maxChars = 300, maxCodeLines = 4) {
-  if (item.sensitive) return `•••••••• ${item.secretLabel ?? 'Sensitive'} (hidden, removed soon)`;
   if (item.kind === 'image') return `Image ${item.imageWidth} × ${item.imageHeight}`;
   const head = (item.text ?? '').slice(0, maxChars * 2);
   if (item.kind === 'code') return head.split('\n').slice(0, maxCodeLines).join('\n').slice(0, maxChars);

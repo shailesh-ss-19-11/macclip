@@ -2,8 +2,6 @@
 const crypto = require('node:crypto');
 const { capture } = require('./capture');
 
-const SENSITIVE_TTL_MS = 2 * 60 * 1000;
-
 /**
  * Watches the system clipboard. Electron exposes no pasteboard change counter, so this polls a cheap
  * fingerprint (format list + text + hash of raw image bytes) and only does real work when it changes.
@@ -49,11 +47,7 @@ class ClipboardMonitor {
     const result = capture(this.clipboard.snapshot(), source, { limits: this.limits });
     if (!result.item) return null;
     const secret = result.item.text ? this.privacy.detectSecret(result.item.text) : null;
-    if (secret) {
-      if (this.privacy.secretMode() === 'skip') return null;
-      // 'expire': keep it pasteable for a short time, masked in the UI, and never searchable.
-      Object.assign(result.item, { sensitive: true, secretLabel: secret, expiresAt: Date.now() + SENSITIVE_TTL_MS, searchText: 'sensitive' });
-    }
+    if (secret) return null; // likely credential: never saved
     const item = this.store.add(result);
     this.onCapture?.(item);
     return item;
@@ -62,4 +56,4 @@ class ClipboardMonitor {
 
 const hashBuffer = (buf) => crypto.createHash('md5').update(buf).digest('hex');
 
-module.exports = { ClipboardMonitor, hashBuffer, SENSITIVE_TTL_MS };
+module.exports = { ClipboardMonitor, hashBuffer };

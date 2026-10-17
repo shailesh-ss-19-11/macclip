@@ -34,11 +34,3 @@
 kbd { font: inherit; background: var(--field); border-radius: 4px; padding: 0 4px; margin-left: 4px; color: var(--text-2); }
 .linkbtn { border: 0; background: transparent; color: var(--text-2); cursor: pointer; padding: 2px 6px; border-radius: 5px; font-size: 11px; }
 .linkbtn:hover { background: var(--hover); color: var(--text); }
-
-.tabs { display: flex; gap: 2px; margin: 0 10px 4px; padding: 2px; background: var(--field); border-radius: 7px; }
-.tabs button { flex: 1; border: 0; background: transparent; padding: 3px 0; border-radius: 5px; color: var(--text-2); font-size: 12px; cursor: pointer; }
-.tabs button[aria-selected=true] { background: var(--tile); color: var(--text); font-weight: 600; }
-.tilewrap { position: relative; flex: none; }
-.badge { position: absolute; right: -4px; bottom: -4px; width: 16px; height: 16px; border-radius: 4px; filter: drop-shadow(0 0 1px rgba(0,0,0,.4)); }
-.title.sensitive { color: var(--text-2); font-style: italic; }
-.title.snippet { font-weight: 500; white-space: nowrap; text-overflow: ellipsis; display: block; -webkit-line-clamp: none; }

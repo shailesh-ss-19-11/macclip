@@ -66,14 +66,6 @@ exports.run = async function run(app, sys) {
     assert.equal(await monitor.checkNow(), null);
     assert.equal(store.items.length, before);
   });
-  await check('screenshot file bytes become an image item with thumbnail', async () => {
-    const png = nativeImage.createFromBitmap(Buffer.alloc(400 * 300 * 4, 120), { width: 400, height: 300 }).toPNG();
-    const result = capture({ text: '', rtf: null, html: null, hasFileUrl: false, imageByteLength: png.length, getImage: () => sys.processImage(png) }, { bundleId: 'com.apple.screencaptureui', name: 'Screenshot' });
-    assert.equal(result.item.kind, 'image');
-    assert.equal(result.item.sourceAppName, 'Screenshot');
-    sys.write(result.item, result.image.png);
-    assert.equal(clipboard.readImage().getSize().width, 400);
-  });
   await check('global shortcut registers and conflicts are reported', async () => {
     const hk = new HotKeyManager({ registrar: globalShortcut, onTrigger() {} });
     assert.equal(hk.register('Control+Alt+Shift+F13'), null);

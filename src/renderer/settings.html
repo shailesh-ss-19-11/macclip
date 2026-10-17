@@ -10,65 +10,26 @@
 <body>
   <header><h1>MacClip Settings</h1></header>
   <main>
-    <section>
-      <h2>General</h2>
-      <div class="card">
-        <div class="field"><label for="shortcut">Global shortcut</label>
-          <div class="grow"><button id="shortcut" class="recorder" aria-describedby="shortcut-msg">⌥V</button></div></div>
-        <p id="shortcut-msg" class="msg" role="status"></p>
-        <div class="field"><label for="launch">Launch at login</label><div class="grow"><input id="launch" type="checkbox" role="switch"></div></div>
-        <p id="launch-note" class="msg" hidden>Launch at login works once MacClip is installed as an app (see README).</p>
-        <div class="field"><label for="paste">When selecting an item</label>
-          <div class="grow"><select id="paste"><option value="copyAndPaste">Copy and Paste</option><option value="copyOnly">Copy to Clipboard</option></select></div></div>
-        <div class="field" id="ax-row"><label>Accessibility</label>
-          <div class="grow"><span id="ax-status"></span> <button id="ax-btn" class="btn">Grant Access…</button></div></div>
-        <p class="msg">Pasting sends ⌘V to the app you were using. macOS requires the Accessibility permission for that. Without it, items are still copied and you press ⌘V yourself.</p>
-        <div class="field"><label for="shots">Save screenshots to history</label><div class="grow"><input id="shots" type="checkbox" role="switch"></div></div>
-        <div class="field"><label for="shots-clip">Also copy screenshots to the clipboard</label><div class="grow"><input id="shots-clip" type="checkbox" role="switch"></div></div>
-        <p class="msg">Watches the folder macOS saves screenshots to (⌘⇧3, ⌘⇧4, ⌘⇧5). macOS may ask you to allow MacClip to access that folder (usually Desktop). Screenshots taken with ⌃⌘⇧4 already go to the clipboard and are saved either way.</p>
-        <div class="field"><label for="appearance">Appearance</label>
-          <div class="grow"><select id="appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div>
-      </div>
-    </section>
-    <section>
-      <h2>History</h2>
-      <div class="card">
-        <div class="field"><label for="limit">Items to keep</label>
-          <div class="grow"><select id="limit"><option value="100">100</option><option value="500">500</option><option value="1000">1,000</option></select></div></div>
-        <div class="field"><label for="retention">Delete automatically after</label>
-          <div class="grow"><select id="retention"><option value="0">Never</option><option value="1">1 day</option><option value="7">7 days</option><option value="30">30 days</option><option value="90">90 days</option></select></div></div>
-        <p class="msg">Pinned items are never removed automatically.</p>
-      </div>
-    </section>
-    <section>
-      <h2>Snippets</h2>
-      <div class="card">
-        <ul id="snippet-list" class="apps"></ul>
-        <form id="snippet-form" class="snippet-form">
-          <input id="snippet-title" type="text" placeholder="Title (optional)" maxlength="80" aria-label="Snippet title">
-          <textarea id="snippet-text" rows="4" placeholder="Text to paste" aria-label="Snippet text"></textarea>
-          <div class="row-end"><span id="snippet-msg" class="msg err" role="status"></span>
-            <button type="button" id="snippet-cancel" class="btn" hidden>Cancel</button>
-            <button type="submit" id="snippet-save" class="btn">Add Snippet</button></div>
-        </form>
-        <p class="msg">Snippets are reusable text that never expires. Open them in the panel with Tab. You can also press ⌘S on a history item to save it.</p>
-      </div>
-    </section>
-    <section>
-      <h2>Privacy</h2>
-      <div class="card">
-        <div class="field"><label for="paused">Pause monitoring</label><div class="grow"><input id="paused" type="checkbox" role="switch"></div></div>
-        <div class="field"><label for="pm">Ignore known password managers</label><div class="grow"><input id="pm" type="checkbox" role="switch"></div></div>
-        <div class="field"><label for="secrets">Likely secrets (tokens, keys, card numbers)</label>
-          <div class="grow"><select id="secrets"><option value="skip">Don’t save</option><option value="expire">Save hidden for 2 minutes</option><option value="off">Save normally</option></select></div></div>
-        <div class="field top"><label>Excluded apps</label>
-          <div class="grow"><ul id="excluded" class="apps"></ul><button id="add-app" class="btn">Add App…</button></div></div>
-        <p class="msg">Copies made while an excluded app is in front are never saved. Text that looks like an API key, access token, private key or card number is skipped by default (pattern-based, so it can miss things). Content marked as concealed or temporary by the source app (the nspasteboard.org convention used by most password managers) is also skipped.</p>
-        <p class="msg warn">macOS cannot reliably tell whether copied content is sensitive. Anything copied from an app that is not excluded <em>is</em> saved, so pause monitoring or exclude apps that handle secrets.</p>
-        <p class="msg">History is stored only on this Mac, in a private folder, encrypted with AES-256-GCM. The key is a file in the same folder, so this protects against casual reading and backups, not against someone who has access to your account. Nothing is sent over the network.</p>
-        <div class="field"><label>Delete everything</label><div class="grow"><button id="clear-all" class="btn danger">Delete All History…</button></div></div>
-      </div>
-    </section>
+    <div class="card">
+      <div class="field"><label for="shortcut">Open clipboard history</label>
+        <div class="grow"><button id="shortcut" class="recorder" aria-describedby="shortcut-msg">⌥V</button></div></div>
+      <p id="shortcut-msg" class="msg" role="status"></p>
+      <div class="field"><label for="paste">When you pick an item</label>
+        <div class="grow"><select id="paste"><option value="copyAndPaste">Copy and paste it</option><option value="copyOnly">Only copy it</option></select></div></div>
+      <div class="field" id="ax-row"><label>Permission to paste</label>
+        <div class="grow"><span id="ax-status"></span> <button id="ax-btn" class="btn">Allow…</button></div></div>
+      <div class="field"><label for="limit">History size</label>
+        <div class="grow"><select id="limit"><option value="100">100 items</option><option value="500">500 items</option><option value="1000">1,000 items</option></select></div></div>
+      <div class="field"><label for="launch">Open at login</label><div class="grow"><input id="launch" type="checkbox" role="switch"></div></div>
+      <p id="launch-note" class="msg" hidden>Works once MacClip is installed in Applications.</p>
+      <div class="field"><label for="paused">Pause (stop saving copies)</label><div class="grow"><input id="paused" type="checkbox" role="switch"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="field"><label>Delete all history</label><div class="grow"><button id="clear-all" class="btn danger">Delete…</button></div></div>
+    </div>
+
+    <p class="foot">Everything stays on this Mac; nothing is sent anywhere. Password managers and things that look like keys or card numbers are never saved. macOS can’t always tell what is sensitive, so use Pause when working with secrets.</p>
   </main>
   <script src="../shared/accelerator.js"></script>
   <script src="settings.js"></script>

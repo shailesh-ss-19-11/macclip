@@ -1,4 +1,4 @@
-Clipboard history for macOS, inspired by Windows `Win + V`. Press **⌥V** from any app to open your history.
+Clipboard history for macOS, inspired by Windows `Win + V`. Press **⌥V** in any app, pick an item, and it is pasted where you were typing.
 
 ## Install
 1. Download the **.dmg** for your Mac: **arm64** for Apple Silicon (M1, M2, M3, M4…), **x64** for Intel.
@@ -7,10 +7,10 @@ Clipboard history for macOS, inspired by Windows `Win + V`. Press **⌥V** from 
    ```sh
    xattr -dr com.apple.quarantine /Applications/MacClip.app
    ```
-4. For automatic paste, allow MacClip under System Settings → Privacy & Security → **Accessibility** (and Automation → System Events when asked). Without it, items are still copied and you press ⌘V yourself.
+4. For automatic paste, allow MacClip under System Settings → Privacy & Security → **Accessibility**. Without it, items are still copied and you press ⌘V yourself.
 
 Requires macOS 12 or later. Verify downloads with `SHA256SUMS.txt`. The `.zip` files contain the same app.
 
-macOS cannot reliably identify sensitive content. Anything copied from an app that is not excluded and does not match a secret pattern is saved; use pause or excluded apps for sensitive work.
+Everything stays on your Mac. macOS cannot reliably tell what is sensitive, so use **Pause** when working with secrets.
 
 ## What's changed

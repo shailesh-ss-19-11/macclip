@@ -54,20 +54,11 @@
       if (key === 'ArrowDown') return { type: 'move', delta: 1 };
       if (key === 'ArrowUp') return { type: 'move', delta: -1 };
       if (key === 'Enter') return { type: 'activate', plain: !!shiftKey };
-      if (key === 'Tab' && !shiftKey) return { type: 'switchMode' };
       if (key === 'Escape') return { type: 'close' };
-      if (key === 'PageDown') return { type: 'move', delta: 8 };
-      if (key === 'PageUp') return { type: 'move', delta: -8 };
     }
     if (metaKey && !ctrlKey && !altKey && !shiftKey) {
       if (key.toLowerCase() === 'p') return { type: 'togglePin' };
-      if (key.toLowerCase() === 's') return { type: 'saveSnippet' };
       if (key === 'Backspace' && searchEmpty) return { type: 'delete' };
-      if (/^[1-9]$/.test(key)) return { type: 'quick', position: Number(key) };
-    }
-    if (ctrlKey && !metaKey && !altKey) {
-      if (key.toLowerCase() === 'n') return { type: 'move', delta: 1 };
-      if (key.toLowerCase() === 'p') return { type: 'move', delta: -1 };
     }
     return null;
   }

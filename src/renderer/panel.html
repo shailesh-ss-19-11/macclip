@@ -13,15 +13,11 @@
       <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 10l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <input id="query" type="text" placeholder="Search clipboard history" aria-label="Search clipboard history" autocomplete="off" spellcheck="false">
     </div>
-    <div class="tabs" role="tablist" aria-label="View">
-      <button id="tab-history" role="tab" aria-selected="true">History</button>
-      <button id="tab-snippets" role="tab" aria-selected="false">Snippets</button>
-    </div>
     <div id="banner" class="banner" hidden></div>
     <div id="list" class="list" role="listbox" aria-label="Clipboard items" tabindex="-1"></div>
     <div class="footer">
       <span id="count" class="count"></span>
-      <span id="hints" class="hints"></span>
+      <span class="hints"><kbd>↩</kbd> paste <kbd>⇧↩</kbd> plain text</span>
       <button id="clear" class="linkbtn" title="Clear unpinned history">Clear</button>
       <button id="settings" class="icon" title="Settings" aria-label="Settings">
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M13.27 6.84L15.15 7.15L15.15 8.85L13.27 9.16L12.55 10.91L13.65 12.46L12.46 13.65L10.91 12.55L9.16 13.27L8.85 15.15L7.15 15.15L6.84 13.27L5.09 12.55L3.54 13.65L2.35 12.46L3.45 10.91L2.73 9.16L0.85 8.85L0.85 7.15L2.73 6.84L3.45 5.09L2.35 3.54L3.54 2.35L5.09 3.45L6.84 2.73L7.15 0.85L8.85 0.85L9.16 2.73L10.91 3.45L12.46 2.35L13.65 3.54L12.55 5.09ZM10.3 8A2.3 2.3 0 1 0 5.7 8A2.3 2.3 0 1 0 10.3 8Z"/></svg>

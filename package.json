@@ -1,6 +1,6 @@
 {
   "name": "macclip",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Clipboard history for macOS, inspired by Windows Win+V",
   "main": "src/main/main.js",
   "license": "MIT",

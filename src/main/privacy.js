@@ -17,36 +17,29 @@ const CONCEALED_TYPES = [
 
 /**
  * Decides whether a clipboard change may be recorded. Best effort only: macOS cannot reliably tell
- * whether content is sensitive, so this relies on app exclusions and the markers above.
+ * whether content is sensitive, so this relies on a built-in list of password managers, the
+ * nspasteboard.org markers, and pattern-based secret detection (see secrets.js).
  */
 class PrivacyManager {
   constructor(settings, ownBundleIds = []) {
     this.settings = settings; // object with get(key)
     this.own = new Set(ownBundleIds);
+    this.excluded = new Set(KNOWN_PASSWORD_MANAGERS);
   }
-
-  excludedBundleIds() {
-    const ids = new Set(this.settings.get('excludedApps'));
-    if (this.settings.get('excludePasswordManagers')) KNOWN_PASSWORD_MANAGERS.forEach((i) => ids.add(i));
-    return ids;
-  }
-
-  /** 'skip' | 'expire' | 'off' */
-  secretMode() { return this.settings.get('secretHandling'); }
-
-  /** Label of the detected secret type (never the secret itself), or null. */
-  detectSecret(text) { return this.secretMode() === 'off' ? null : detectSecret(text); }
 
   /** Returns { record: true } or { record: false, reason }. */
   evaluate({ sourceBundleId, formats = [] }) {
     if (this.settings.get('paused')) return { record: false, reason: 'paused' };
     if (sourceBundleId) {
       if (this.own.has(sourceBundleId)) return { record: false, reason: 'own-app' };
-      if (this.excludedBundleIds().has(sourceBundleId)) return { record: false, reason: 'excluded-app' };
+      if (this.excluded.has(sourceBundleId)) return { record: false, reason: 'excluded-app' };
     }
     if (formats.some((f) => CONCEALED_TYPES.includes(f))) return { record: false, reason: 'concealed' };
     return { record: true };
   }
+
+  /** Label of the detected secret type (never the secret itself), or null. */
+  detectSecret(text) { return detectSecret(text); }
 }
 
 module.exports = { PrivacyManager, KNOWN_PASSWORD_MANAGERS, CONCEALED_TYPES };

@@ -82,7 +82,6 @@ class HistoryStore extends EventEmitter {
     const item = this.get(id);
     if (!item) return;
     item.isPinned = !item.isPinned;
-    if (item.isPinned) delete item.expiresAt; // pinning keeps a sensitive item
     this._changed();
   }
 
@@ -112,7 +111,6 @@ class HistoryStore extends EventEmitter {
     const removed = [];
     this.items = this.items.filter((i) => {
       if (i.isPinned) return true; // pinned items are never removed automatically
-      if (i.expiresAt && i.expiresAt <= now) { removed.push(i); return false; }
       const expired = cutoff !== null && i.createdAt < cutoff;
       if (expired || keptUnpinned >= this.maxItems) { removed.push(i); return false; }
       keptUnpinned++;

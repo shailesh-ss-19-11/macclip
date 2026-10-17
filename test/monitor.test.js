@@ -63,22 +63,15 @@ test('paused monitoring records nothing, and resuming does not import stale cont
   assert.deepEqual(store.items.map((i) => i.text), ['after resume']);
 });
 
-test('excluded apps and password managers are not recorded', async () => {
-  const { cb, monitor, store, state } = setup({ settings: { excludedApps: ['com.example.secret'] } });
-  state.front = { bundleId: 'com.example.secret', name: 'Secret', pid: 1 };
-  cb.setText('hidden'); await monitor.checkNow();
+test('password managers are not recorded', async () => {
+  const { cb, monitor, store, state } = setup();
   state.front = { bundleId: 'com.1password.1password', name: '1Password', pid: 2 };
   cb.setText('password'); await monitor.checkNow();
+  state.front = { bundleId: 'org.keepassxc.keepassxc', name: 'KeePassXC', pid: 4 };
+  cb.setText('another'); await monitor.checkNow();
   assert.equal(store.items.length, 0);
   state.front = { bundleId: 'com.apple.Notes', name: 'Notes', pid: 3 };
   cb.setText('fine'); await monitor.checkNow();
-  assert.equal(store.items.length, 1);
-});
-
-test('password manager exclusion can be turned off', async () => {
-  const { cb, monitor, store, state } = setup({ settings: { excludePasswordManagers: false } });
-  state.front = { bundleId: 'com.1password.1password', name: '1Password', pid: 2 };
-  cb.setText('now recorded'); await monitor.checkNow();
   assert.equal(store.items.length, 1);
 });
 

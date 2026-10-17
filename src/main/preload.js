@@ -10,9 +10,6 @@ const on = (channel) => (cb) => {
 
 contextBridge.exposeInMainWorld('macclip', {
   list: invoke('history:list'),
-  appIcon: invoke('app:icon'),
-  deleteSnippet: invoke('snippets:delete'),
-  saveAsSnippet: invoke('snippets:fromItem'),
   thumbnail: invoke('history:thumbnail'),
   select: invoke('history:select'),
   togglePin: invoke('history:togglePin'),
@@ -24,14 +21,9 @@ contextBridge.exposeInMainWorld('macclip', {
   onChanged: on('history:changed'),
   settings: {
     get: invoke('settings:get'),
-    listSnippets: invoke('snippets:list'),
-    saveSnippet: invoke('snippets:save'),
-    deleteSnippet: invoke('snippets:delete'),
     set: invoke('settings:set'),
     setHotkey: invoke('settings:setHotkey'),
     setLaunchAtLogin: invoke('settings:setLaunchAtLogin'),
-    addExcludedApp: invoke('settings:addExcludedApp'),
-    removeExcludedApp: invoke('settings:removeExcludedApp'),
     clearAll: invoke('settings:clearAll'),
     accessibility: invoke('settings:accessibility'),
     requestAccessibility: invoke('settings:requestAccessibility'),

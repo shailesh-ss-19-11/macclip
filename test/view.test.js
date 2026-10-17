@@ -42,11 +42,8 @@ test('key bindings', () => {
   assert.deepEqual(k('ArrowUp'), { type: 'move', delta: -1 });
   assert.deepEqual(k('Enter'), { type: 'activate', plain: false });
   assert.deepEqual(k('Enter', { shiftKey: true }), { type: 'activate', plain: true });
-  assert.deepEqual(k('Tab'), { type: 'switchMode' });
-  assert.deepEqual(k('s', { metaKey: true }), { type: 'saveSnippet' });
   assert.deepEqual(k('Escape'), { type: 'close' });
   assert.deepEqual(k('p', { metaKey: true }), { type: 'togglePin' });
-  assert.deepEqual(k('3', { metaKey: true }), { type: 'quick', position: 3 });
   assert.deepEqual(k('Backspace', { metaKey: true }), { type: 'delete' });
   assert.equal(k('a'), null);
   assert.equal(V.commandForKey({ key: 'Backspace', metaKey: true }, { searchEmpty: false }), null);
@@ -87,13 +84,13 @@ test('settings persist across relaunch and reject invalid values', () => {
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'macclip-s-')), 's.json');
   const a = new Settings(file);
   assert.equal(a.get('hotkey'), 'Alt+V');
-  a.set('historyLimit', 1000); a.set('excludedApps', ['com.x']);
+  a.set('historyLimit', 1000); a.set('paused', true);
   assert.throws(() => a.set('historyLimit', 3));
   assert.throws(() => a.set('nope', 1));
   const b = new Settings(file);
   assert.equal(b.get('historyLimit'), 1000);
-  assert.deepEqual(b.get('excludedApps'), ['com.x']);
-  assert.equal(b.get('retentionDays'), DEFAULTS.retentionDays);
+  assert.equal(b.get('paused'), true);
+  assert.equal(b.get('pasteBehavior'), DEFAULTS.pasteBehavior);
 });
 
 test('corrupt settings file falls back to defaults', () => {
