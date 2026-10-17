@@ -46,12 +46,15 @@ npm start          # or: npm run dev
 
 From source the app is called "Electron" in macOS permission lists, so grant Accessibility to Electron (or your terminal).
 
-## Build
+## Build the DMG
 
 ```sh
-ARCH=arm64 npm run package && npm run dmg -- arm64    # release/MacClip-<version>-mac-arm64.dmg
-ARCH=x64   npm run package && npm run dmg -- x64
+npm install              # first time only
+npm run build:dmg        # Apple Silicon (M1–M4)  →  release/MacClip-<version>-mac-arm64.dmg
+ARCH=x64 npm run build:dmg   # Intel Macs        →  release/MacClip-<version>-mac-x64.dmg
 ```
+
+`build:dmg` runs two steps you can also run separately: `ARCH=arm64 npm run package` (builds `dist/MacClip-darwin-arm64/MacClip.app`) and `npm run dmg -- arm64` (wraps that app in a DMG with an Applications shortcut). Open the DMG and drag MacClip to Applications; see *Install* for the first-launch approval.
 
 ## Releasing
 

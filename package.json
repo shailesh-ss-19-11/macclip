@@ -12,7 +12,8 @@
     "smoke": "MACCLIP_SMOKE=1 electron .",
     "icons": "node scripts/make-icons.js",
     "package": "node scripts/package.js",
-    "dmg": "bash scripts/make-dmg.sh"
+    "dmg": "bash scripts/make-dmg.sh",
+    "build:dmg": "ARCH=${ARCH:-arm64} npm run package && bash scripts/make-dmg.sh ${ARCH:-arm64}"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
