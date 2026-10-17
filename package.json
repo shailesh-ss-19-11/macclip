@@ -11,7 +11,8 @@
     "test": "node --test \"test/*.test.js\"",
     "smoke": "MACCLIP_SMOKE=1 electron .",
     "icons": "node scripts/make-icons.js",
-    "package": "node scripts/package.js"
+    "package": "node scripts/package.js",
+    "dmg": "bash scripts/make-dmg.sh"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",

@@ -40,8 +40,9 @@ jobs:
           for ARCH in arm64 x64; do
             ARCH=$ARCH npm run package
             ditto -c -k --sequesterRsrc --keepParent "dist/MacClip-darwin-$ARCH/MacClip.app" "release/MacClip-$VERSION-mac-$ARCH.zip"
+            bash scripts/make-dmg.sh "$ARCH"
           done
-          (cd release && shasum -a 256 *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

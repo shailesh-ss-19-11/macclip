@@ -46,7 +46,7 @@ npm run package            # dist/MacClip-darwin-<your arch>/MacClip.app
 ARCH=x64 npm run package   # or arm64 / universal
 ```
 
-Drag `MacClip.app` into `/Applications`, then open it. It is signed ad-hoc, so on first launch macOS may require **right-click → Open** (or System Settings → Privacy & Security → Open Anyway). To distribute to other Macs, sign and notarize with a Developer ID: `SIGN_IDENTITY="Developer ID Application: …" npm run package`, then notarize with `xcrun notarytool`.
+`npm run dmg` (after packaging) wraps the app into `release/MacClip-<version>-mac-<arch>.dmg` with an Applications shortcut. Open the DMG and drag `MacClip.app` to Applications. The app is only ad-hoc signed (not notarized), so macOS blocks the first launch: open it once, then System Settings → Privacy & Security → **Open Anyway** (macOS 15+; on older versions right-click → Open also works), or run `xattr -dr com.apple.quarantine /Applications/MacClip.app`. To distribute to other Macs, sign and notarize with a Developer ID: `SIGN_IDENTITY="Developer ID Application: …" npm run package`, then notarize with `xcrun notarytool`.
 
 "Launch at login" only works from the installed app.
 
@@ -108,7 +108,7 @@ Design notes:
 Releases are automated with GitHub Actions (`.github/workflows`):
 
 - **CI** runs `npm test` on every push to `main` and on pull requests.
-- **Release** builds the arm64 and x64 packages and publishes a GitHub release when you push a version tag:
+- **Release** builds the arm64 and x64 DMGs and zips and publishes a GitHub release when you push a version tag:
 
 ```sh
 npm version 1.1.0 --no-git-tag-version   # bump package.json (and the lockfile)
@@ -135,6 +135,7 @@ Not automated: the physical hotkey press, real pastes into other apps, the tray 
 |---|---|
 | ⌥V does nothing | Another app owns the shortcut (a ⚠︎ appears in the menu bar menu). Pick a new one in Settings. Also check the menu bar icon exists |
 | Item is copied but not pasted | Grant Accessibility (and Automation → System Events), then reopen the panel. You will get a notification explaining which case it was |
+| macOS blocks MacClip or says it is damaged | The app is not notarized. System Settings → Privacy & Security → **Open Anyway**, or `xattr -dr com.apple.quarantine /Applications/MacClip.app` |
 | Pasting stopped working after a rebuild | Remove MacClip from the Accessibility list and add it again |
 | Keychain prompt on every launch | Click **Always Allow**. Rebuilt ad-hoc builds are seen as a new app |
 | Nothing is recorded | Monitoring may be paused (menu bar), the source app may be excluded, or the app marks its content as concealed |
