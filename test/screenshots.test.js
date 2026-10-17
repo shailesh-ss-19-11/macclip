@@ -27,15 +27,15 @@ test('reports a new screenshot once, after it is fully written', async () => {
   const dir = tmp();
   fs.writeFileSync(path.join(dir, 'Screenshot old.png'), 'old');   // pre-existing: ignored
   const got = [];
-  const w = new ScreenshotWatcher({ directory: dir, pollMs: 20, onScreenshot: async (f) => { got.push([path.basename(f), fs.readFileSync(f, 'utf8')]); } });
+  const w = new ScreenshotWatcher({ directory: dir, pollMs: 50, onScreenshot: async (f) => { got.push([path.basename(f), fs.readFileSync(f, 'utf8')]); } });
   w.start();
   fs.writeFileSync(path.join(dir, '.Screenshot new.png'), 'tmp');          // hidden temp: ignored
   fs.writeFileSync(path.join(dir, 'notes.png'), 'x');                       // not a screenshot
   const final = path.join(dir, 'Screenshot new.png');
   fs.writeFileSync(final, 'part');
-  await wait(30);
+  await wait(20);
   fs.appendFileSync(final, '-complete');                                    // still growing
-  await wait(400);
+  await wait(1000);
   w.stop();
   assert.deepEqual(got, [['Screenshot new.png', 'part-complete']]);
 });

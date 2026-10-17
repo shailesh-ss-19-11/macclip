@@ -44,11 +44,13 @@ class ScreenshotWatcher {
     try {
       // Wait until the file exists and its size stops changing.
       let last = -1;
+      let stable = 0;
       const deadline = Date.now() + this.settleMs;
       for (;;) {
         let size = -1;
         try { size = fs.statSync(file).size; } catch { /* not there yet */ }
-        if (size > 0 && size === last) break;
+        stable = size > 0 && size === last ? stable + 1 : 0;
+        if (stable >= 2) break; // unchanged across two consecutive checks
         last = size;
         if (Date.now() > deadline) return;
         await new Promise((r) => setTimeout(r, this.pollMs));
