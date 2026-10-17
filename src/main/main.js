@@ -12,7 +12,7 @@ app.setName('MacClip');
 
 const { Settings } = require('./settings');
 const { HistoryStore } = require('./historyStore');
-const { EncryptedFilePersistence, SafeStorageKeyProvider, MemoryPersistence } = require('./persistence');
+const { EncryptedFilePersistence, FileKeyProvider, MemoryPersistence } = require('./persistence');
 const { PrivacyManager } = require('./privacy');
 const { ClipboardMonitor } = require('./clipboardMonitor');
 const { AppTracker } = require('./appTracker');
@@ -106,11 +106,22 @@ async function start() {
 function createPersistence() {
   const dir = path.join(app.getPath('userData'), 'data');
   try {
-    const keys = new SafeStorageKeyProvider(safeStorage, path.join(dir, 'key.bin'));
-    if (keys.isAvailable()) { keys.getKey(); return new EncryptedFilePersistence(dir, keys); }
-  } catch { /* fall through */ }
-  storageWarning = 'Secure storage is unavailable, so history will not be saved between launches.';
-  return new MemoryPersistence();
+    const keys = new FileKeyProvider(path.join(dir, 'history.key'), { legacyKey: legacyKeychainKey(dir) });
+    keys.getKey(); // create the key file now so a disk problem shows up immediately
+    return new EncryptedFilePersistence(dir, keys);
+  } catch {
+    storageWarning = 'MacClip could not write to its data folder, so history will not be saved between launches.';
+    return new MemoryPersistence();
+  }
+}
+
+/** Versions up to 1.0.1 wrapped the data key with the Keychain (safeStorage). Reuse it if it still works. */
+function legacyKeychainKey(dir) {
+  const legacyFile = path.join(dir, 'key.bin');
+  return () => {
+    if (!fs.existsSync(legacyFile) || !safeStorage.isEncryptionAvailable()) return null;
+    return Buffer.from(safeStorage.decryptString(fs.readFileSync(legacyFile)), 'hex');
+  };
 }
 
 // ───────────────────────────── panel ─────────────────────────────

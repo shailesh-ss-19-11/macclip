@@ -1,6 +1,6 @@
 'use strict';
-// `npm run smoke`: exercises the real Electron clipboard / nativeImage / safeStorage paths, then exits.
-const { clipboard, nativeImage, safeStorage, globalShortcut } = require('electron');
+// `npm run smoke`: exercises the real Electron clipboard / nativeImage / globalShortcut paths, then exits.
+const { clipboard, nativeImage, globalShortcut } = require('electron');
 const assert = require('node:assert');
 const { capture } = require('./capture');
 const { ClipboardMonitor } = require('./clipboardMonitor');
@@ -74,7 +74,6 @@ exports.run = async function run(app, sys) {
     sys.write(result.item, result.image.png);
     assert.equal(clipboard.readImage().getSize().width, 400);
   });
-  await check('safeStorage available', async () => { assert.ok(safeStorage.isEncryptionAvailable()); });
   await check('global shortcut registers and conflicts are reported', async () => {
     const hk = new HotKeyManager({ registrar: globalShortcut, onTrigger() {} });
     assert.equal(hk.register('Control+Alt+Shift+F13'), null);

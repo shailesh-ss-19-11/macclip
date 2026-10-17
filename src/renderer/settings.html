@@ -65,7 +65,7 @@
           <div class="grow"><ul id="excluded" class="apps"></ul><button id="add-app" class="btn">Add App…</button></div></div>
         <p class="msg">Copies made while an excluded app is in front are never saved. Text that looks like an API key, access token, private key or card number is skipped by default (pattern-based, so it can miss things). Content marked as concealed or temporary by the source app (the nspasteboard.org convention used by most password managers) is also skipped.</p>
         <p class="msg warn">macOS cannot reliably tell whether copied content is sensitive. Anything copied from an app that is not excluded <em>is</em> saved, so pause monitoring or exclude apps that handle secrets.</p>
-        <p class="msg">History is encrypted on this Mac (AES-256-GCM, key protected by the macOS Keychain). Nothing is sent over the network.</p>
+        <p class="msg">History is stored only on this Mac, in a private folder, encrypted with AES-256-GCM. The key is a file in the same folder, so this protects against casual reading and backups, not against someone who has access to your account. Nothing is sent over the network.</p>
         <div class="field"><label>Delete everything</label><div class="grow"><button id="clear-all" class="btn danger">Delete All History…</button></div></div>
       </div>
     </section>

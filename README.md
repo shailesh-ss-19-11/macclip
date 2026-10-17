@@ -57,7 +57,6 @@ ARCH=x64 npm run package   # or arm64 / universal
 | **Accessibility** (System Settings → Privacy & Security → Accessibility) | To send ⌘V to the app you were using | Items are still copied; press ⌘V yourself |
 | **Automation → System Events** (prompted on first paste) | Pasting is done by asking System Events to press ⌘V | Same as above |
 | **Files & Folders** (prompted once) | To watch your screenshot folder (usually Desktop) for new screenshots | Screenshots saved as files are not imported; clipboard screenshots still work |
-| Keychain access (prompted once) | Stores the key that encrypts your history | History is kept in memory only |
 
 MacClip only pastes into the app that was frontmost when you opened the panel, and only if it is frontmost again afterwards. If you switched apps, it copies and tells you instead of pasting somewhere unexpected. It never activates a third app.
 
@@ -66,14 +65,14 @@ Enable it in Settings → General → Accessibility → *Grant Access…*. After
 ## Privacy and security
 
 - Everything stays on your Mac. There is no network code and no analytics.
-- History is encrypted with AES-256-GCM. The random data key is wrapped with Electron `safeStorage` (backed by the login Keychain). Files live in `~/Library/Application Support/MacClip/data/`; each image is a separate encrypted blob.
+- History is stored in `~/Library/Application Support/MacClip/data/` (folder mode 0700, files 0600), encrypted with AES-256-GCM; each image is a separate encrypted blob. The random key is a file (`history.key`) in the same folder. This needs no Keychain access and never fails for permission reasons, but it only protects against casual reading and file backups, not against someone with access to your macOS account.
 - Clipboard content is never logged.
 - Skipped automatically: copies made while an **excluded app** is frontmost, a built-in list of password managers (toggleable), content marked concealed/transient/auto-generated via the `org.nspasteboard.*` markers, file copies from Finder, and copies made while monitoring is **paused**.
 - Secret detection is pattern-based (AWS, GitHub, Slack, Stripe, Google, `sk-` keys, JWTs, private keys, bearer tokens, `password=…` lines, card numbers). It will miss secrets that don't match, and can occasionally flag harmless text; change Settings → Privacy → *Likely secrets*.
 - **Limitation:** macOS cannot reliably tell that something is sensitive. Anything copied from a non-excluded app that does not set those markers *is* saved (e.g. a password copied from a web page). Pause monitoring or exclude apps that handle secrets.
 - The source app is identified when the change is *detected* (polled every 0.5 s), so if you switch apps within that window it can be misattributed.
 - Link previews are rendered locally (host + path). MacClip does not fetch favicons or page titles because that would reveal what you copied.
-- Unreadable history is renamed `history.corrupt-<time>.bin` and the app starts empty. If secure storage is unavailable, history is kept in memory only and the menu shows a warning.
+- Unreadable history is renamed `history.corrupt-<time>.bin` and the app starts empty. If the data folder cannot be written, history is kept in memory only and the menu shows a warning.
 
 ## Architecture
 
@@ -84,7 +83,7 @@ src/main/            main process (no UI)
   systemClipboard.js   the only file that touches Electron's clipboard/nativeImage
   capture.js         pure: snapshot → item (type detection, hashing, limits)
   historyStore.js    in-memory history: dedupe, pin, delete, search, retention, debounced saves
-  persistence.js     AES-GCM encrypted file store + safeStorage key provider + in-memory test double
+  persistence.js     AES-GCM encrypted file store + key-file provider + in-memory test double
   privacy.js         exclusions, pause, concealed types
   hotkey.js          global shortcut registration, conflicts, wake re-register
   pasteCoordinator.js  restore to clipboard, verify target app, send ⌘V
@@ -121,8 +120,8 @@ The tag must match the version in `package.json`. To try the build without publi
 ## Tests
 
 ```sh
-npm test         # 92 unit tests (node:test)
-npm run smoke    # drives the real Electron clipboard, nativeImage, safeStorage and globalShortcut
+npm test         # 98 unit tests (node:test)
+npm run smoke    # drives the real Electron clipboard, nativeImage and globalShortcut
 ```
 
 Unit tests cover change detection, text/URL/image/code capture, duplicates, search and sorting, pinning and deletion, retention, persistence across relaunch (including encryption, corruption and wrong key), shortcut registration/conflicts/wake, privacy exclusions, paste behaviour when switching apps, and keyboard navigation logic.
@@ -137,8 +136,7 @@ Not automated: the physical hotkey press, real pastes into other apps, the tray 
 | Item is copied but not pasted | Grant Accessibility (and Automation → System Events), then reopen the panel. You will get a notification explaining which case it was |
 | macOS blocks MacClip or says it is damaged | The app is not notarized. System Settings → Privacy & Security → **Open Anyway**, or `xattr -dr com.apple.quarantine /Applications/MacClip.app` |
 | Pasting stopped working after a rebuild | Remove MacClip from the Accessibility list and add it again |
-| Keychain prompt on every launch | Click **Always Allow**. Rebuilt ad-hoc builds are seen as a new app |
 | Nothing is recorded | Monitoring may be paused (menu bar), the source app may be excluded, or the app marks its content as concealed |
 | Items from a password manager appear | Add that app under Settings → Privacy → Excluded apps |
-| History empty after update | See `history.corrupt-*.bin` in the data folder; the key may have been reset in Keychain |
-| Reset everything | Quit, then delete `~/Library/Application Support/MacClip` and the "MacClip Safe Storage" Keychain item |
+| History empty after update | See `history.corrupt-*.bin` in the data folder; `history.key` may have been deleted (the old history cannot be decrypted without it) |
+| Reset everything | Quit, then delete `~/Library/Application Support/MacClip` |

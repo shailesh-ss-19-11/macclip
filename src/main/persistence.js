@@ -21,27 +21,45 @@ function open(sealed, key) {
   return Buffer.concat([decipher.update(sealed.subarray(28)), decipher.final()]);
 }
 
-/** Wraps a random data key with Electron's safeStorage (which keeps its secret in the login Keychain). */
-class SafeStorageKeyProvider {
-  constructor(safeStorage, keyFile) {
-    this.safeStorage = safeStorage;
+/**
+ * Keeps the random 256-bit data key in a private file (mode 0600) in the data folder. This needs no
+ * Keychain access, so it cannot fail because of signing or permissions. It protects against casual
+ * reading and file backups, not against someone who already has access to this macOS account.
+ *
+ * `legacyKey` (optional) returns a key from an older storage scheme (the Keychain-wrapped key used by
+ * version 1.0.1 and earlier) so existing history can still be opened; it is migrated to the key file.
+ */
+class FileKeyProvider {
+  constructor(keyFile, { legacyKey = null } = {}) {
     this.keyFile = keyFile;
+    this.legacyKey = legacyKey;
     this.cached = null;
   }
 
-  isAvailable() { return this.safeStorage.isEncryptionAvailable(); }
-
   getKey() {
     if (this.cached) return this.cached;
-    if (!this.isAvailable()) throw new Error('Secure storage unavailable');
+    let key = null;
     if (fs.existsSync(this.keyFile)) {
-      this.cached = Buffer.from(this.safeStorage.decryptString(fs.readFileSync(this.keyFile)), 'hex');
-    } else {
-      this.cached = crypto.randomBytes(32);
-      fs.mkdirSync(path.dirname(this.keyFile), { recursive: true, mode: 0o700 });
-      fs.writeFileSync(this.keyFile, this.safeStorage.encryptString(this.cached.toString('hex')), { mode: 0o600 });
+      const raw = Buffer.from(fs.readFileSync(this.keyFile, 'utf8').trim(), 'hex');
+      if (raw.length === 32) key = raw;
     }
-    return this.cached;
+    if (!key && this.legacyKey) {
+      try { key = this.legacyKey(); } catch { key = null; }
+      if (key && key.length !== 32) key = null;
+    }
+    if (!key) key = crypto.randomBytes(32);
+    if (!fs.existsSync(this.keyFile) || !this._matches(key)) this._write(key);
+    this.cached = key;
+    return key;
+  }
+
+  _matches(key) {
+    try { return Buffer.from(fs.readFileSync(this.keyFile, 'utf8').trim(), 'hex').equals(key); } catch { return false; }
+  }
+
+  _write(key) {
+    fs.mkdirSync(path.dirname(this.keyFile), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(this.keyFile, key.toString('hex'), { mode: 0o600 });
   }
 }
 
@@ -184,4 +202,4 @@ class MemoryPersistence {
   async idle() {}
 }
 
-module.exports = { EncryptedFilePersistence, SafeStorageKeyProvider, StaticKeyProvider, MemoryPersistence, CorruptedError, seal, open };
+module.exports = { EncryptedFilePersistence, FileKeyProvider, StaticKeyProvider, MemoryPersistence, CorruptedError, seal, open };
